@@ -11,7 +11,7 @@ def log_features_dlgn(model,bias_log=False):
       for i in range(0,model.depth):
           if name == 'gates.'+str(i)+'.weight':
               weight.append(param.data)
-          if bias:
+          if bias_log:
             if name == 'gates.'+str(i)+'.bias':
                 bias.append(param.data)
 
