@@ -25,7 +25,28 @@ def log_features_dlgn(model,bias_log=False):
   return features #make it to .to("cpu") if you want to use it in numpy
 
 
-def feature_stats(features,data_dim=18,tree_depth=4,dim_in=18,threshold=0.1,req_index=False): #can set tree_depth=0 to get root node stats...
+def log_features_dlgn_kernel(model,bias_log=False):   ## Don't use it for DLGN model
+  weight = []
+  bias = []
+  for name, param in model.named_parameters():
+      for i in range(0,model.depth):
+          if name == 'gates.'+str(i):
+              weight.append(param.data)
+          if bias:
+            if name == 'gates.'+str(i)+'.bias':
+                bias.append(param.data)
+
+  Feature_list = [weight[0].T]
+
+  for w in weight[1:]:
+    Feature_list.append(w.T @ Feature_list[-1])
+
+  features = torch.cat(Feature_list, axis = 0)
+
+  return features
+
+
+def feature_stats(features,data_dim=18,tree_depth=4,threshold=0.1,req_index=False): #can set tree_depth=0 to get root node stats...
   '''
   Returns the count of features that are close to the standard basis vectors within a threshold
   Can return the indices of the features as well if req_index=True
@@ -35,7 +56,7 @@ def feature_stats(features,data_dim=18,tree_depth=4,dim_in=18,threshold=0.1,req_
   '''
   num_nodes = 2**tree_depth-1
   tensor = torch.eye(data_dim)  #standard basis
-  y=torch.randn(dim_in)
+  y=torch.randn(data_dim)
   rand_point=y/torch.norm(y, p=2)
 
   count = torch.zeros(num_nodes)

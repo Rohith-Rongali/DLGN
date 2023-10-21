@@ -3,14 +3,14 @@ import torch.nn as nn
 
 
 class DLGN(nn.Module):
-    def __init__(self, dim_in, width, depth, beta,bias_fn=True,bias_vn=False):
+    def __init__(self, dim_in,dim_out, width, depth, beta,bias_fn=True,bias_vn=False):
         super().__init__()
         self.depth = depth
         self.width = width
         self.beta = beta
         self.gates = nn.ModuleList([nn.Linear(dim_in if i == 0 else width, width, bias=bias_fn) for i in range(self.depth)])  
         self.weights = nn.ModuleList([nn.Linear(width, width, bias=bias_vn) for _ in range(self.depth)])
-        self.weight_last = nn.Linear(width, 1, bias=False)
+        self.weight_last = nn.Linear(width, dim_out, bias=True)
         self.dim_in = dim_in
         self.sigmoid = nn.Sigmoid()
 
@@ -28,7 +28,7 @@ class DLGN(nn.Module):
             h = self.ScaledSig(g) * self.weights[i](h)
 
         h_last = self.weight_last(h)
-        return self.sigmoid(h_last)
+        return h_last
 
 class DNN(nn.Module):
     def __init__(self, dim_in, dim_out, width, depth):
@@ -43,4 +43,48 @@ class DNN(nn.Module):
         for layer in self.layers:
             x = self.relu(layer(x))
         x = self.output_layer(x)
-        return self.sigmoid(x)
+        return x                    # no activation on output layer. This is done in the loss function like nn.CrossEntropyLoss() and nn.BCELosswithLogits()
+    
+
+class DLGN_Kernel(nn.Module):
+    def __init__(self, num_data, dim_in, width, depth, beta = 4):   #output dimension is 1
+        super().__init__()
+        self.num_data = num_data
+        self.beta = beta
+        self.dim_in = dim_in
+        self.width = width
+        self.depth = depth
+        sigma = 1/torch.sqrt(width)
+        self.gates = nn.ParameterList([nn.Parameter(sigma*torch.randn(dim_in if i == 0 else width, width)) for i in range(depth)])
+        self.alphas = nn.Parameter(torch.randn(num_data)/torch.sqrt(num_data))
+        #self._cache = None
+
+    def ScaledSig(self,x):
+        y = self.beta*x
+        S = nn.Sigmoid()
+        return S(y)
+    
+    def get_weights(self):
+        A = [self.gates[0]]
+        for i in range(1,self.depth):
+            A.append(A[-1]@self.gates[i])
+        return torch.vstack(A)
+
+
+    def forward(self, inp, data):
+        #ones = torch.ones(self.dim_in).to(x.device())
+        #self._cache = None
+        data_gate_matrix = data @ self.gates[0]
+        data_gate_score = self.ScaledSig(data_gate_matrix, self.beta)
+        inp_gate_matrix = inp @ self.gates[0]
+        inp_gate_score = self.ScaledSig(inp_gate_matrix, self.beta)
+        output_kernel =  (inp_gate_score @ data_gate_score.T)
+        for i in range(1,self.depth):
+            data_gate_matrix = data_gate_matrix @ self.gates[i]
+            inp_gate_matrix = inp_gate_matrix @ self.gates[i]
+            data_gate_score = self.ScaledSig(data_gate_matrix, self.beta)
+            inp_gate_score = self.ScaledSig(inp_gate_matrix, self.beta)
+            output_kernel *= (inp_gate_score @ data_gate_score.T)/self.width
+        #print(torch.max(output_kernel), torch.min(output_kernel))
+        return self.ScaledSig(output_kernel @ self.alphas, 1)
+
