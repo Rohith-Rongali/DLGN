@@ -1,4 +1,5 @@
 import torch
+from torch.utils.data import Dataset
 import numpy as np
 
 def generate_points(num=40000,dim=18,type='normal',normal_var=1,radius=1):
@@ -12,8 +13,11 @@ def generate_points(num=40000,dim=18,type='normal',normal_var=1,radius=1):
       X_spherical = X / norm
       return X_spherical
 
-    else:
+    elif type=='normal':
       return X
+    
+    else:
+      raise ValueError('type should be either normal or spherical')
     
 
 class TreeNode:
@@ -173,3 +177,20 @@ def gen_random_DT(num_data=1000, dim=2, seed=0, w_list=None, b_list=None, vals=N
 
 #     Y = torch.tensor(Y)
 
+class CustomDataset(Dataset):
+    def __init__(self, x, y, transform=None):
+        self.x = x
+        self.y = y
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.x)
+
+    def __getitem__(self, idx):
+        sample_x = self.x[idx]
+        sample_y = self.y[idx]
+
+        if self.transform:
+            sample_x, sample_y = self.transform(sample_x, sample_y)
+
+        return sample_x, sample_y

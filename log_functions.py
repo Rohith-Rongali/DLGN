@@ -25,7 +25,31 @@ def log_features_dlgn(model,bias_log=False):
   return features #make it to .to("cpu") if you want to use it in numpy
 
 
-def log_features_dlgn_kernel(model,bias_log=False):   ## Don't use it for DLGN model
+def log_features_dlgn_sf(model,bias_log=False):
+  '''
+  This function returns the log of the features of the gates in model.
+  Returns a 2-d tensor with rows of shape (num_gates, data_dim)
+  '''
+  weight = []
+  bias = []
+  for name, param in model.named_parameters():
+      for i in range(0,model.depth):
+          if name == 'gates.'+str(i)+'.weight':
+              weight.append(param.data)
+          if bias_log:
+            if name == 'gates.'+str(i)+'.bias':
+                bias.append(param.data)
+
+  Feature_list = []
+
+  for w in weight:
+    Feature_list.append(w)
+
+  features = torch.cat(Feature_list, axis = 0)
+
+  return features #make it to .to("cpu") if you want to use it in numpy
+
+def log_features_DLGN_kernel(model,bias=False):   ## Don't use it for DLGN model
   weight = []
   bias = []
   for name, param in model.named_parameters():
@@ -43,10 +67,10 @@ def log_features_dlgn_kernel(model,bias_log=False):   ## Don't use it for DLGN m
 
   features = torch.cat(Feature_list, axis = 0)
 
-  return features
+  return features   #make it to .to("cpu") if you want to use it in numpy
 
 
-def feature_stats(features,data_dim=18,tree_depth=4,threshold=0.1,req_index=False): #can set tree_depth=0 to get root node stats...
+def feature_stats(features,data_dim=18,tree_depth=4,dim_in=18,threshold=0.1,req_index=False): #can set tree_depth=0 to get root node stats...
   '''
   Returns the count of features that are close to the standard basis vectors within a threshold
   Can return the indices of the features as well if req_index=True
@@ -56,7 +80,7 @@ def feature_stats(features,data_dim=18,tree_depth=4,threshold=0.1,req_index=Fals
   '''
   num_nodes = 2**tree_depth-1
   tensor = torch.eye(data_dim)  #standard basis
-  y=torch.randn(data_dim)
+  y=torch.randn(dim_in)
   rand_point=y/torch.norm(y, p=2)
 
   count = torch.zeros(num_nodes)

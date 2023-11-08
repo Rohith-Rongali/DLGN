@@ -3,14 +3,17 @@ import torch.nn as nn
 
 
 class DLGN(nn.Module):
-    def __init__(self, dim_in,dim_out, width, depth, beta,bias_fn=True,bias_vn=False):
+    def __init__(self, dim_in, width, depth, beta,bias_fn=True,bias_vn=False,const_init=False):
         super().__init__()
         self.depth = depth
         self.width = width
         self.beta = beta
-        self.gates = nn.ModuleList([nn.Linear(dim_in if i == 0 else width, width, bias=bias_fn) for i in range(self.depth)])  
+        self.gates = nn.ModuleList([nn.Linear(dim_in if i == 0 else width, width, bias=bias_fn) for i in range(self.depth)])
         self.weights = nn.ModuleList([nn.Linear(width, width, bias=bias_vn) for _ in range(self.depth)])
-        self.weight_last = nn.Linear(width, dim_out, bias=True)
+        if const_init:
+          for i in range(self.depth):
+            nn.init.constant_(self.weights[i].weight,1.0/width)
+        self.weight_last = nn.Linear(width, 1, bias=True)
         self.dim_in = dim_in
         self.sigmoid = nn.Sigmoid()
 
@@ -28,7 +31,36 @@ class DLGN(nn.Module):
             h = self.ScaledSig(g) * self.weights[i](h)
 
         h_last = self.weight_last(h)
-        return h_last
+        return self.sigmoid(h_last)
+    
+
+
+class DLGN_SF(nn.Module):
+    def __init__(self, dim_in, width, depth, beta,bias_fn=True,bias_vn=False):
+        super().__init__()
+        self.depth = depth
+        self.width = width
+        self.beta = beta
+        self.gates = nn.ModuleList([nn.Linear(dim_in, width, bias=bias_fn) for i in range(self.depth)]) #This is the only diff between DLGN and DLGN_SF
+        self.weights = nn.ModuleList([nn.Linear(width, width, bias=bias_vn) for _ in range(self.depth)])
+        self.weight_last = nn.Linear(width, 1, bias=True)
+        self.dim_in = dim_in
+        self.sigmoid = nn.Sigmoid()
+
+    def ScaledSig(self,x):
+        y = self.beta*x
+        S = nn.Sigmoid()
+        return S(y)
+
+    def forward(self, x):
+        h = torch.ones(self.width).to(x.device)
+
+        for i in range(self.depth):
+            g = self.gates[i](x)   #This is the only diff between DLGN and DLGN_SF
+            h = self.ScaledSig(g) * self.weights[i](h)
+
+        h_last = self.weight_last(h)
+        return self.sigmoid(h_last)
 
 class DNN(nn.Module):
     def __init__(self, dim_in, dim_out, width, depth):
