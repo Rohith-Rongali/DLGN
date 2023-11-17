@@ -1,0 +1,6 @@
+width: 200
+depth: 4
+beta: 4
+bias_fn: true
+bias_vn: false
+model_type: 'dlgn'

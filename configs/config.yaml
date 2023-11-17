@@ -1,0 +1,5 @@
+defaults:
+  - data: data
+  - model: model
+  - train: train
+  - log: log

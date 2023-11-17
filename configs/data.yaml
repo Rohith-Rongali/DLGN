@@ -1,0 +1,5 @@
+dim_in: 20
+type_data: 'spherical'
+num_points: 30000
+radius: 1
+dim_out: 1

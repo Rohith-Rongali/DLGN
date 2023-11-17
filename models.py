@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class DLGN(nn.Module):
-    def __init__(self, dim_in, width, depth, beta,bias_fn=True,bias_vn=False,const_init=False):
+    def __init__(self, dim_in, width, depth, beta,bias_fn=True,bias_vn=False,const_init=False,dim_out=1):
         super().__init__()
         self.depth = depth
         self.width = width
@@ -13,7 +13,7 @@ class DLGN(nn.Module):
         if const_init:
           for i in range(self.depth):
             nn.init.constant_(self.weights[i].weight,1.0/width)
-        self.weight_last = nn.Linear(width, 1, bias=True)
+        self.weight_last = nn.Linear(width, dim_out, bias=True)
         self.dim_in = dim_in
         self.sigmoid = nn.Sigmoid()
 

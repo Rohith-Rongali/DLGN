@@ -1,0 +1,5 @@
+num_epochs: 400
+batch_size: 32
+lr: 0.001
+momentum: 0.9
+thresh: 0.01
