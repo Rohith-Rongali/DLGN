@@ -1,0 +1,5 @@
+- data.dim_in=40
+- data.depth=4
+- data.num_points=60000
+- train.num_epochs=490
+- model.width=200

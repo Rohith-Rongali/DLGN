@@ -67,7 +67,7 @@ def return_data_elements(DataConfig, TrainConfig):
 
     bound_list_root=[]
     bound_thresh_root=0.01
-    num_nodes = 2**DataConfig.tree_depth-1
+    num_nodes = 2**DataConfig.depth-1
 
     for i in range(len(x_train)):
         if (torch.abs(x_train[i][0])<bound_thresh_root).any():  #if the first coordinate is less than the threshold

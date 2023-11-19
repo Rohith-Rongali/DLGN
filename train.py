@@ -88,6 +88,7 @@ def train(model,loss_fn,optimizer,train_dataloader,
                 #     print(f'Epoch {epoch} train_acc {train_acc} test_acc {test_acc}  // interior {int_acc} boundary {bound_acc} root_node {bound_root_acc}')
         if loss_full.item() < train_config.thresh:
             print(f'Early stopping at epoch {epoch} because loss is below {train_config.thresh}')
+            features_train.append(log_features_fn(model))
             break
 
     # features_final = log_features_fn(model)

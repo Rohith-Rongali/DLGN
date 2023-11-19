@@ -1,0 +1,2 @@
+- train.num_epochs=200
+- train.lr=0.01

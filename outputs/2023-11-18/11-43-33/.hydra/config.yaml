@@ -1,0 +1,25 @@
+data:
+  dim_in: 50
+  depth: 3
+  type_data: spherical
+  num_points: 30000
+  radius: 1
+  dim_out: 1
+model:
+  width: 200
+  depth: 4
+  beta: 4
+  bias_fn: true
+  bias_vn: false
+  model_type: dlgn
+train:
+  num_epochs: 400
+  batch_size: 32
+  lr: 0.001
+  momentum: 0.9
+  thresh: 0.01
+log:
+  log_epochs: 10
+  log_weight: 10
+  log_acc: 10
+  log_path: logs

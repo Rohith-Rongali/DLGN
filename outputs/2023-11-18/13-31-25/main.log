@@ -1,0 +1,5 @@
+[2023-11-18 13:31:25,130][hydra.utils][INFO] - Logging from main
+[2023-11-18 13:43:13,397][__main__][INFO] - Training accuracy: 0.9835185185185186
+[2023-11-18 13:43:13,397][__main__][INFO] - Testing accuracy: 0.9716666666666667
+[2023-11-18 13:43:13,478][__main__][INFO] - Training losses plot: train_losses.png
+[2023-11-18 13:43:13,566][__main__][INFO] - Accuracies plot: accuracies.png

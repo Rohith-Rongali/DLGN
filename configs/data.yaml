@@ -1,4 +1,5 @@
 dim_in: 20
+depth: 4
 type_data: 'spherical'
 num_points: 30000
 radius: 1
